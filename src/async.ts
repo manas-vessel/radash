@@ -155,7 +155,7 @@ export const retry = async <TResponse>(
     delay?: number | null
     backoff?: (count: number) => number
   },
-  func: (exit: (err: any) => void) => Promise<TResponse>
+  func: (bail: (err: any) => void, attemptIdx: number) => Promise<TResponse>
 ): Promise<TResponse> => {
   const times = options?.times ?? 3
   const delay = options?.delay
@@ -163,7 +163,7 @@ export const retry = async <TResponse>(
   for (const i of range(1, times)) {
     const [err, result] = (await tryit(func)((err: any) => {
       throw { _exited: err }
-    })) as [any, TResponse]
+    }, i)) as [any, TResponse]
     if (!err) return result
     if (err._exited) throw err._exited
     if (i === times) throw err
